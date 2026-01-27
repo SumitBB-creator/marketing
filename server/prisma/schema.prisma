@@ -1,0 +1,286 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  super_admin
+  admin
+  marketer
+}
+
+enum FieldType {
+  text
+  email
+  url
+  phone
+  number
+  date
+  textarea
+  select
+  file
+}
+
+enum FieldCategory {
+  lead_detail
+  tracking_action
+}
+
+enum AggregationType {
+  count
+  list
+  percentage
+  none
+}
+
+enum ActivityType {
+  created
+  updated
+  status_changed
+  note_added
+}
+
+enum EmailStatus {
+  pending
+  sent
+  failed
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password_hash String
+  full_name     String
+  role          Role
+  avatar_url    String?
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  last_login    DateTime?
+
+  created_platforms       Platform[]            @relation("PlatformCreator")
+  marketer_assignments    MarketerAssignment[]  @relation("Marketer")
+  assigned_assignments    MarketerAssignment[]  @relation("Assigner")
+  leads                   Lead[]
+  activities              LeadActivity[]
+  branding_updates        BrandingConfig[]
+  settings_updates        SystemSettings[]
+  
+  // Relations for Email Reports
+  admin_email_reports     EmailReport[]         @relation("ReportAdmin")
+  marketer_email_reports  EmailReport[]         @relation("ReportMarketer")
+  sessions                UserSession[]
+  sticky_notes            StickyNote[]
+  shared_links            SharedLink[]
+
+  @@map("users")
+}
+
+model StickyNote {
+  id          String   @id @default(uuid())
+  user_id     String
+  content     String
+  color       String   @default("yellow") // yellow, blue, pink, green
+  position_x  Int      @default(0)
+  position_y  Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("sticky_notes")
+}
+
+model UserSession {
+  id             String    @id @default(uuid())
+  user_id        String
+  login_at       DateTime  @default(now())
+  last_active_at DateTime  @default(now())
+  logout_at      DateTime?
+  user_agent     String?
+  ip_address     String?
+  
+  user           User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model Platform {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  icon        String?
+  is_active   Boolean  @default(true)
+  created_by  String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  creator     User     @relation("PlatformCreator", fields: [created_by], references: [id])
+  
+  fields      PlatformField[]
+  assignments MarketerAssignment[]
+  leads       Lead[]
+  report_configs ReportConfiguration[]
+  email_reports EmailReport[]
+
+  @@map("platforms")
+}
+
+model PlatformField {
+  id              String        @id @default(uuid())
+  platform_id     String
+  field_name      String
+  field_type      FieldType
+  field_category  FieldCategory
+  is_required     Boolean       @default(false)
+  field_order     Int
+  options         Json?         // JSON array for select options
+  placeholder     String?
+  validation_rules Json?
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+
+  platform        Platform      @relation(fields: [platform_id], references: [id], onDelete: Cascade)
+  report_config   ReportConfiguration?
+
+  @@map("platform_fields")
+}
+
+model ReportConfiguration {
+  id              String          @id @default(uuid())
+  platform_id     String
+  field_id        String          @unique
+  include_in_report Boolean       @default(true)
+  display_order   Int
+  aggregation_type AggregationType
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+
+  platform        Platform        @relation(fields: [platform_id], references: [id], onDelete: Cascade)
+  field           PlatformField   @relation(fields: [field_id], references: [id], onDelete: Cascade)
+
+  @@map("report_configurations")
+}
+
+model MarketerAssignment {
+  id          String   @id @default(uuid())
+  marketer_id String
+  platform_id String
+  assigned_by String
+  assigned_at DateTime @default(now())
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  marketer    User     @relation("Marketer", fields: [marketer_id], references: [id], onDelete: Cascade)
+  platform    Platform @relation(fields: [platform_id], references: [id], onDelete: Cascade)
+  assigner    User     @relation("Assigner", fields: [assigned_by], references: [id])
+
+  @@unique([marketer_id, platform_id])
+  @@map("marketer_assignments")
+}
+
+model Lead {
+  id                String    @id @default(uuid())
+  platform_id       String
+  marketer_id       String
+  lead_data         Json      // Stores custom field values
+  current_status    String?
+  next_action       String?
+  next_meeting_date DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  last_activity_at  DateTime?
+
+  platform          Platform  @relation(fields: [platform_id], references: [id], onDelete: Restrict)
+  marketer          User      @relation(fields: [marketer_id], references: [id], onDelete: Restrict)
+  activities        LeadActivity[]
+  shared_links      SharedLink[]
+
+  @@map("leads")
+}
+
+model LeadActivity {
+  id            String       @id @default(uuid())
+  lead_id       String
+  marketer_id   String
+  activity_type ActivityType
+  old_values    Json?
+  new_values    Json?
+  notes         String?
+  created_at    DateTime     @default(now())
+
+  lead          Lead         @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  marketer      User         @relation(fields: [marketer_id], references: [id])
+
+  @@map("lead_activities")
+}
+
+model BrandingConfig {
+  id              String   @id @default(uuid())
+  primary_color   String   @default("#3B82F6")
+  secondary_color String   @default("#10B981")
+  accent_color    String   @default("#F59E0B")
+  logo_url        String?
+  favicon_url     String?
+  company_name    String   @default("LeadTrack Pro")
+  font_family     String   @default("Inter")
+  font_size_base  String   @default("14px")
+  border_radius   String   @default("8px")
+  custom_css      String?
+  updated_at      DateTime @updatedAt
+  updated_by      String
+
+  updater         User     @relation(fields: [updated_by], references: [id])
+
+  @@map("branding_config")
+}
+
+model EmailReport {
+  id          String      @id @default(uuid())
+  report_date DateTime
+  admin_id    String
+  platform_id String?
+  marketer_id String?
+  report_data Json
+  sent_at     DateTime?
+  email_status EmailStatus
+  created_at  DateTime    @default(now())
+
+  admin       User        @relation("ReportAdmin", fields: [admin_id], references: [id])
+  platform    Platform?   @relation(fields: [platform_id], references: [id])
+  marketer    User?       @relation("ReportMarketer", fields: [marketer_id], references: [id])
+
+  @@map("email_reports")
+}
+
+model SystemSettings {
+  id            String   @id @default(uuid())
+  setting_key   String   @unique
+  setting_value Json
+  description   String?
+  updated_at    DateTime @updatedAt
+  updated_by    String
+
+  updater       User     @relation(fields: [updated_by], references: [id])
+
+  @@map("system_settings")
+}
+
+model SharedLink {
+  id          String   @id @default(uuid())
+  lead_id     String
+  token       String   @unique @default(uuid())
+  expires_at  DateTime?
+  created_by  String
+  created_at  DateTime @default(now())
+
+  lead        Lead     @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+  creator     User     @relation(fields: [created_by], references: [id])
+
+  @@map("shared_links")
+}
