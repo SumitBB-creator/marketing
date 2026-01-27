@@ -20,9 +20,9 @@ export const downloadTemplate = async (req: Request, res: Response) => {
         const systemHeaders = ['Name', 'Phone', 'Email', 'Address'];
 
         const dynamicHeaders = platform.fields
-            ? platform.fields
-                .filter(f => !['Name', 'Full Name'].includes(f.field_name)) // Avoid dupes if user created them
-                .map(f => f.field_name)
+            ? (platform.fields as any[])
+                .filter((f: any) => !['Name', 'Full Name'].includes(f.field_name)) // Avoid dupes if user created them
+                .map((f: any) => f.field_name)
             : [];
 
         const headers = [...systemHeaders, ...dynamicHeaders];

@@ -54,8 +54,8 @@ const downloadTemplate = async (req, res) => {
         const systemHeaders = ['Name', 'Phone', 'Email', 'Address'];
         const dynamicHeaders = platform.fields
             ? platform.fields
-                .filter(f => !['Name', 'Full Name'].includes(f.field_name)) // Avoid dupes if user created them
-                .map(f => f.field_name)
+                .filter((f) => !['Name', 'Full Name'].includes(f.field_name)) // Avoid dupes if user created them
+                .map((f) => f.field_name)
             : [];
         const headers = [...systemHeaders, ...dynamicHeaders];
         // 2. Create Workbook
