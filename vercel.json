@@ -16,8 +16,8 @@
             "dest": "/server/api/index.ts"
         },
         {
-            "src": "/(.+\\..+)",
-            "dest": "/client/$1"
+            "src": "/uploads/(.*)",
+            "dest": "/server/uploads/$1"
         },
         {
             "src": "/(.*)",
