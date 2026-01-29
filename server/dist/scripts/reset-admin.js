@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const prisma = new client_1.PrismaClient();
+const database_1 = require("../config/database");
 async function main() {
     const email = process.argv[2] || 'admin@example.com';
     const password = process.argv[3] || 'admin123';
@@ -14,7 +14,7 @@ async function main() {
     console.log(`Password: ${password}`);
     const salt = await bcrypt_1.default.genSalt(10);
     const password_hash = await bcrypt_1.default.hash(password, salt);
-    const user = await prisma.user.upsert({
+    const user = await database_1.prisma.user.upsert({
         where: { email },
         update: {
             password_hash,
@@ -37,5 +37,5 @@ async function main() {
 main()
     .catch((e) => console.error(e))
     .finally(async () => {
-    await prisma.$disconnect();
+    await database_1.prisma.$disconnect();
 });

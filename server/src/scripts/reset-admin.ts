@@ -1,7 +1,6 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import bcrypt from 'bcrypt';
-
-const prisma = new PrismaClient();
+import { prisma } from '../config/database';
 
 async function main() {
     const email = process.argv[2] || 'admin@example.com';

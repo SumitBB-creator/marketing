@@ -1,6 +1,5 @@
-import { PrismaClient, BrandingConfig } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { BrandingConfig } from '@prisma/client';
+import { prisma } from '../config/database';
 
 export class BrandingService {
     /**

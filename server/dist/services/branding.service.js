@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.brandingService = exports.BrandingService = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const database_1 = require("../config/database");
 class BrandingService {
     /**
      * Get the current branding configuration.
@@ -12,7 +11,7 @@ class BrandingService {
         // There should theoretically be only one active config, or we take the latest.
         // For this system, we can assume a singleton config row, or always fetch the most recent one.
         // Let's fetch the most recently updated one.
-        const config = await prisma.brandingConfig.findFirst({
+        const config = await database_1.prisma.brandingConfig.findFirst({
             orderBy: {
                 updated_at: 'desc'
             },
@@ -34,14 +33,14 @@ class BrandingService {
      */
     async updateBrandingConfig(data, userId) {
         // Check if a config already exists
-        const existingConfig = await prisma.brandingConfig.findFirst({
+        const existingConfig = await database_1.prisma.brandingConfig.findFirst({
             orderBy: {
                 updated_at: 'desc'
             }
         });
         if (existingConfig) {
             // Update existing
-            return await prisma.brandingConfig.update({
+            return await database_1.prisma.brandingConfig.update({
                 where: { id: existingConfig.id },
                 data: {
                     ...data,
@@ -51,7 +50,7 @@ class BrandingService {
         }
         else {
             // Create new
-            return await prisma.brandingConfig.create({
+            return await database_1.prisma.brandingConfig.create({
                 data: {
                     ...data,
                     updated_by: userId

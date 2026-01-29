@@ -1,13 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const database_1 = require("../config/database");
 async function main() {
     console.log('Resetting branding configuration...');
     // Delete all branding configs to fallback to defaults
-    await prisma.brandingConfig.deleteMany({});
+    await database_1.prisma.brandingConfig.deleteMany({});
     // Optional: Create a default one
-    await prisma.brandingConfig.create({
+    await database_1.prisma.brandingConfig.create({
         data: {
             company_name: 'LeadTrack Pro',
             primary_color: '#3B82F6', // Blue-500
@@ -21,11 +20,11 @@ async function main() {
 }
 // Just delete is safer if the app logic handles missing config
 async function simpleReset() {
-    await prisma.brandingConfig.deleteMany({});
+    await database_1.prisma.brandingConfig.deleteMany({});
     console.log('Branding configuration deleted. App should use defaults.');
 }
 simpleReset()
     .catch((e) => console.error(e))
     .finally(async () => {
-    await prisma.$disconnect();
+    await database_1.prisma.$disconnect();
 });
