@@ -10,6 +10,7 @@ const createLeadSchema = z.object({
     current_status: z.string().optional(),
     next_action: z.string().optional(),
     next_meeting_date: z.string().datetime().optional().or(z.literal('')),
+    assign_to_pool: z.boolean().optional(),
 });
 
 const updateLeadSchema = z.object({
@@ -20,15 +21,45 @@ const updateLeadSchema = z.object({
     notes: z.string().optional()
 });
 
+export const deleteLead = async (req: Request, res: Response) => {
+    try {
+        const leadId = req.params.id as string;
+        // @ts-ignore
+        const userId = req.user.id;
+        // @ts-ignore
+        const userRole = req.user.role;
+
+        await leadService.deleteLead(leadId, userId, userRole);
+        res.json({ message: 'Lead deleted successfully' });
+    } catch (error: any) {
+        if (error.message.includes('Permission denied')) {
+            res.status(403).json({ message: error.message });
+        } else if (error.message.includes('not found')) {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: error.message });
+        }
+    }
+};
+
 export const createLead = async (req: Request, res: Response) => {
     try {
         const validatedData = createLeadSchema.parse(req.body);
         // @ts-ignore
         const user = req.user;
 
+        // Determine assignment:
+        // If Admin explicitly requests valid assign_to_pool=true, set marketer_id = undefined (Common Pool)
+        // Otherwise, default to assigning to the creator (user.id)
+        let marketerDetails: string | undefined = user.id;
+
+        if ((user.role === 'admin' || user.role === 'super_admin') && validatedData.assign_to_pool) {
+            marketerDetails = undefined;
+        }
+
         const lead = await leadService.createLead({
             ...validatedData,
-            marketer_id: user.id,
+            marketer_id: marketerDetails,
             // cleanup date if empty string
             next_meeting_date: validatedData.next_meeting_date === '' ? undefined : validatedData.next_meeting_date
         });
@@ -48,19 +79,16 @@ export const getLeads = async (req: Request, res: Response) => {
         const user = req.user;
         const platformId = req.query.platform_id as string;
 
-        const params: any = {};
-        if (platformId) params.platform_id = platformId;
+        const leads = await leadService.getLeads({
+            platform_id: req.query.platform_id as string,
+            marketer_id: req.query.marketer_id as string || (user.role === 'marketer' ? user.id : undefined),
+            limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+            offset: req.query.offset ? parseInt(req.query.offset as string) : undefined,
+            requestingUserId: user.id,
+            requestingUserRole: user.role
+        });
 
-        // If marketer, force filter by their ID
-        if (user.role === Role.marketer) {
-            params.marketer_id = user.id;
-        } else if (req.query.marketer_id) {
-            // Admin can filter by marketer
-            params.marketer_id = req.query.marketer_id as string;
-        }
-
-        const result = await leadService.getLeads(params);
-        res.json(result);
+        res.json(leads);
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -74,8 +102,28 @@ export const getLead = async (req: Request, res: Response) => {
         // @ts-ignore
         const user = req.user;
         // Verify access for marketer
-        if (user.role === Role.marketer && lead.marketer_id !== user.id) {
-            return res.status(403).json({ message: 'Access denied to this lead' });
+        if (user.role === Role.marketer) {
+            // Logic:
+            // 1. If assigned to me: OK
+            // 2. If unassigned (marketer_id === null): Check if I am assigned to this platform.
+
+            if (lead.marketer_id && lead.marketer_id !== user.id) {
+                return res.status(403).json({ message: 'Access denied: Lead assigned to another marketer.' });
+            }
+
+            if (!lead.marketer_id) {
+                // Check if user is assigned to this platform
+                // We use prisma directly here or service? Service is cleaner but lets do quick check
+                const assignment = await prisma.marketerAssignment.findFirst({
+                    where: {
+                        marketer_id: user.id,
+                        platform_id: lead.platform_id
+                    }
+                });
+                if (!assignment) {
+                    return res.status(403).json({ message: 'Access denied: You are not assigned to this platform.' });
+                }
+            }
         }
 
         res.json(lead);
@@ -131,6 +179,19 @@ export const bulkUpdateLeads = async (req: Request, res: Response) => {
     }
 }
 
+export const claimLead = async (req: Request, res: Response) => {
+    try {
+        const leadId = req.params.id as string;
+        // @ts-ignore
+        const userId = req.user.id; // Marketer claiming the lead
+
+        const lead = await leadService.claimLead(leadId, userId);
+        res.json(lead);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 export const shareLead = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -158,3 +219,16 @@ export const shareLead = async (req: Request, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+export const optOutLead = async (req: Request, res: Response) => {
+    try {
+        const leadId = req.params.id as string;
+        // @ts-ignore
+        const userId = req.user.id;
+
+        await leadService.optOutLead(leadId, userId);
+        res.json({ message: 'Lead opted out successfully' });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};

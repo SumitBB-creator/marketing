@@ -20,6 +20,7 @@ enum FieldType {
   phone
   number
   date
+  datetime
   textarea
   select
   file
@@ -56,6 +57,12 @@ model User {
   password_hash String
   full_name     String
   role          Role
+  phone         String?
+  address       String?
+  city          String?
+  country       String?
+  headline      String?
+  bio           String?
   avatar_url    String?
   is_active     Boolean   @default(true)
   created_at    DateTime  @default(now())
@@ -187,7 +194,7 @@ model MarketerAssignment {
 model Lead {
   id                String    @id @default(uuid())
   platform_id       String
-  marketer_id       String
+  marketer_id       String?
   lead_data         Json      // Stores custom field values
   current_status    String?
   next_action       String?
@@ -197,7 +204,7 @@ model Lead {
   last_activity_at  DateTime?
 
   platform          Platform  @relation(fields: [platform_id], references: [id], onDelete: Restrict)
-  marketer          User      @relation(fields: [marketer_id], references: [id], onDelete: Restrict)
+  marketer          User?     @relation(fields: [marketer_id], references: [id], onDelete: Restrict)
   activities        LeadActivity[]
   shared_links      SharedLink[]
 
@@ -230,8 +237,12 @@ model BrandingConfig {
   company_name    String   @default("LeadTrack Pro")
   font_family     String   @default("Inter")
   font_size_base  String   @default("14px")
-  border_radius   String   @default("8px")
-  custom_css      String?
+  border_radius    String   @default("8px")
+  sidebar_color    String?  @default("#ffffff")
+  background_color String?  @default("#f3f4f6") // Default gray-100
+  text_color       String?  @default("#1f2937") // Default gray-800
+  heading_color    String?  @default("#111827") // Default gray-900
+  custom_css       String?
   updated_at      DateTime @updatedAt
   updated_by      String
 

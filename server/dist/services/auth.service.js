@@ -59,6 +59,22 @@ class AuthService {
         });
         return { user, token };
     }
+    async logout(userId) {
+        // Find the most recent active session
+        const session = await database_1.default.userSession.findFirst({
+            where: {
+                user_id: userId,
+                logout_at: null
+            },
+            orderBy: { login_at: 'desc' }
+        });
+        if (session) {
+            await database_1.default.userSession.update({
+                where: { id: session.id },
+                data: { logout_at: new Date() }
+            });
+        }
+    }
     async getUserById(id) {
         return database_1.default.user.findUnique({ where: { id } });
     }

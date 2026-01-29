@@ -12,6 +12,7 @@ import uploadRoutes from './routes/upload.routes';
 import stickyNoteRoutes from './routes/stickyNote.routes';
 import importRoutes from './routes/import.routes';
 import publicRoutes from './routes/public.routes';
+import userRoutes from './routes/user.routes';
 
 const app: Application = express();
 
@@ -19,7 +20,9 @@ const app: Application = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(morgan('dev'));
 
 // Routes
@@ -33,6 +36,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/notes', stickyNoteRoutes);
 app.use('/api/import', importRoutes);
 app.use('/api/shared', publicRoutes);
+app.use('/api/users', userRoutes);
 
 // Serve uploads statically
 import path from 'path';

@@ -50,6 +50,26 @@ export default function AllLeadsPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        try {
+            await LeadService.delete(id);
+            fetchData();
+        } catch (error: any) {
+            console.error("Failed to delete lead", error);
+            alert(`Failed to delete lead: ${error.response?.data?.message || 'Unknown error'}`);
+        }
+    };
+
+    const handleOptOut = async (id: string) => {
+        try {
+            await LeadService.optOut(id);
+            fetchData();
+        } catch (error: any) {
+            console.error("Failed to opt out", error);
+            alert(`Failed to opt out: ${error.response?.data?.message || 'Unknown error'}`);
+        }
+    };
+
     return (
         <div className="p-8 space-y-6">
             <h1 className="text-3xl font-bold">All Leads</h1>
@@ -64,6 +84,8 @@ export default function AllLeadsPage() {
                         platforms={platforms}
                         onEdit={handleEditClick}
                         onSave={handleSave}
+                        onDelete={handleDelete}
+                        onOptOut={handleOptOut}
                         disableCopy={true}
                     />
                 )}

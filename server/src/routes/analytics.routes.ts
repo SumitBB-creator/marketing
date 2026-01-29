@@ -7,7 +7,9 @@ import { Role } from '@prisma/client';
 const router = Router();
 const adminOnly = [Role.admin, Role.super_admin];
 
+const allRoles = [Role.admin, Role.super_admin, Role.marketer];
+
 router.get('/dashboard', authenticate, requireRole(adminOnly), getDashboardStats);
-router.get('/performance', authenticate, requireRole(adminOnly), getPerformanceStats);
+router.get('/performance', authenticate, requireRole(allRoles), getPerformanceStats);
 
 export default router;

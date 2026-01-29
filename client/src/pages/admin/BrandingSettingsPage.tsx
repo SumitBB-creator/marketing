@@ -13,14 +13,19 @@ import { toast } from '@/hooks/use-toast';
 import { BrandingPreview } from '@/components/admin/BrandingPreview';
 // import { Separator } from '@/components/ui/separator';
 import { Loader2, RefreshCw, Save } from 'lucide-react';
-import { Select } from '@/components/ui/select';
+
 import { useBranding } from '@/components/branding-provider';
+import api from '@/lib/axios';
+import { X } from 'lucide-react';
 
 const brandingSchema = z.object({
     company_name: z.string().min(1, 'Company name is required'),
     primary_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color'),
     secondary_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color'),
     accent_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color'),
+    background_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color').optional(),
+    text_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color').optional(),
+    heading_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color').optional(),
     logo_url: z.string().optional().or(z.literal("")),
     favicon_url: z.string().optional().or(z.literal("")),
     font_family: z.string().optional(),
@@ -43,6 +48,9 @@ export default function BrandingSettingsPage() {
             primary_color: '#3B82F6',
             secondary_color: '#10B981',
             accent_color: '#F59E0B',
+            background_color: '#ffffff',
+            text_color: '#1f2937',
+            heading_color: '#111827',
             border_radius: '0.5rem',
             font_family: 'Inter',
         }
@@ -63,6 +71,9 @@ export default function BrandingSettingsPage() {
                 setValue('primary_color', config.primary_color);
                 setValue('secondary_color', config.secondary_color);
                 setValue('accent_color', config.accent_color);
+                setValue('background_color', config.background_color || '#ffffff');
+                setValue('text_color', config.text_color || '#1f2937');
+                setValue('heading_color', config.heading_color || '#111827');
                 setValue('logo_url', config.logo_url || '');
                 setValue('favicon_url', config.favicon_url || '');
                 setValue('font_family', config.font_family);
@@ -163,13 +174,121 @@ export default function BrandingSettingsPage() {
                                 {errors.company_name && <p className="text-sm text-red-500">{errors.company_name.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="logo_url">Logo URL</Label>
-                                <Input id="logo_url" placeholder="https://..." {...register('logo_url')} />
-                                <p className="text-xs text-muted-foreground">URL to your company logo (PNG/SVG recommended).</p>
+                                <Label htmlFor="logo_url">Logo</Label>
+                                <div className="flex flex-col gap-3">
+                                    {/* Current Logo Preview & Remove */}
+                                    {watch('logo_url') && (
+                                        <div className="relative group w-fit">
+                                            <div className="h-16 w-fit p-2 border rounded-md bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                                                <img src={watch('logo_url') || ''} alt="Logo Preview" className="h-full object-contain max-w-[200px]" />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setValue('logo_url', '', { shouldDirty: true })}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                title="Remove Logo"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Upload Input */}
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="file"
+                                            id="logo_upload"
+                                            accept="image/*"
+                                            className="cursor-pointer file:bg-blue-50 file:text-blue-700 file:border-0 file:rounded-md file:px-2 file:py-1 file:mr-4 file:text-sm file:font-medium hover:file:bg-blue-100"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+
+                                                setSaving(true); // Reuse saving state for loading indicator
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+
+                                                try {
+                                                    const res = await api.post('/upload', formData, {
+                                                        headers: { 'Content-Type': 'multipart/form-data' }
+                                                    });
+                                                    setValue('logo_url', res.data.url, { shouldDirty: true });
+                                                    toast({ title: "Logo uploaded", description: "Logo updated successfully." });
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    toast({ title: "Upload failed", description: "Failed to upload logo.", variant: "destructive" });
+                                                } finally {
+                                                    setSaving(false);
+                                                    // Reset file input
+                                                    e.target.value = '';
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Hidden Input for Form Registration */}
+                                    <input type="hidden" {...register('logo_url')} />
+                                    {errors.logo_url && <p className="text-sm text-red-500">{errors.logo_url.message}</p>}
+                                    <p className="text-xs text-muted-foreground">Upload your company logo (PNG, SVG, or JPG).</p>
+                                </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="favicon_url">Favicon URL</Label>
-                                <Input id="favicon_url" placeholder="https://..." {...register('favicon_url')} />
+                                <Label htmlFor="favicon_url">Favicon</Label>
+                                <div className="flex flex-col gap-3">
+                                    {/* Current Favicon Preview & Remove */}
+                                    {watch('favicon_url') && (
+                                        <div className="relative group w-fit">
+                                            <div className="h-12 w-12 p-2 border rounded-md bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                                                <img src={watch('favicon_url') || ''} alt="Favicon Preview" className="h-8 w-8 object-contain" />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setValue('favicon_url', '', { shouldDirty: true })}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                title="Remove Favicon"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Upload Input */}
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="file"
+                                            id="favicon_upload"
+                                            accept="image/x-icon,image/png,image/svg+xml,image/jpeg"
+                                            className="cursor-pointer file:bg-blue-50 file:text-blue-700 file:border-0 file:rounded-md file:px-2 file:py-1 file:mr-4 file:text-sm file:font-medium hover:file:bg-blue-100"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+
+                                                setSaving(true);
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+
+                                                try {
+                                                    const res = await api.post('/upload', formData, {
+                                                        headers: { 'Content-Type': 'multipart/form-data' }
+                                                    });
+                                                    setValue('favicon_url', res.data.url, { shouldDirty: true });
+                                                    toast({ title: "Favicon uploaded", description: "Favicon updated successfully." });
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    toast({ title: "Upload failed", description: "Failed to upload favicon.", variant: "destructive" });
+                                                } finally {
+                                                    setSaving(false);
+                                                    e.target.value = '';
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Hidden Input for Form Registration */}
+                                    <input type="hidden" {...register('favicon_url')} />
+                                    {errors.favicon_url && <p className="text-sm text-red-500">{errors.favicon_url.message}</p>}
+                                    <p className="text-xs text-muted-foreground">Upload your favicon (ICO, PNG, or SVG).</p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -208,6 +327,33 @@ export default function BrandingSettingsPage() {
                                         <Input {...register('accent_color')} className="font-mono uppercase" />
                                     </div>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="background_color">App Background</Label>
+                                    <div className="flex gap-2">
+                                        <div className="h-10 w-10 rounded-md border shadow-sm overflow-hidden">
+                                            <input type="color" className="h-full w-full p-0 cursor-pointer border-0" {...register('background_color')} />
+                                        </div>
+                                        <Input {...register('background_color')} className="font-mono uppercase" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="text_color">Text Color</Label>
+                                    <div className="flex gap-2">
+                                        <div className="h-10 w-10 rounded-md border shadow-sm overflow-hidden">
+                                            <input type="color" className="h-full w-full p-0 cursor-pointer border-0" {...register('text_color')} />
+                                        </div>
+                                        <Input {...register('text_color')} className="font-mono uppercase" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="heading_color">Heading Color</Label>
+                                    <div className="flex gap-2">
+                                        <div className="h-10 w-10 rounded-md border shadow-sm overflow-hidden">
+                                            <input type="color" className="h-full w-full p-0 cursor-pointer border-0" {...register('heading_color')} />
+                                        </div>
+                                        <Input {...register('heading_color')} className="font-mono uppercase" />
+                                    </div>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -219,28 +365,34 @@ export default function BrandingSettingsPage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Font Family</Label>
-                                <Select {...register('font_family')}>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    {...register('font_family')}
+                                >
                                     <option value="Inter">Inter</option>
                                     <option value="Arial">Arial</option>
                                     <option value="Helvetica">Helvetica</option>
                                     <option value="Times New Roman">Times New Roman</option>
                                     <option value="Courier New">Courier New</option>
-                                </Select>
+                                </select>
                             </div>
                             <div className="space-y-2">
                                 <Label>Border Radius</Label>
-                                <Select {...register('border_radius')}>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    {...register('border_radius')}
+                                >
                                     <option value="0rem">0 (Square)</option>
                                     <option value="0.3rem">Small (0.3rem)</option>
                                     <option value="0.5rem">Medium (0.5rem)</option>
                                     <option value="0.75rem">Large (0.75rem)</option>
                                     <option value="1.0rem">Extra Large (1rem)</option>
                                     <option value="9999px">Full (Rounded)</option>
-                                </Select>
+                                </select>
                             </div>
                         </CardContent>
                     </Card>
-                </div>
+                </div >
 
                 <div className="space-y-6">
                     <BrandingPreview config={watchedValues} />
@@ -259,7 +411,7 @@ export default function BrandingSettingsPage() {
                         </CardContent>
                     </Card>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

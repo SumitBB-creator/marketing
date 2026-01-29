@@ -64,6 +64,24 @@ export class AuthService {
         return { user, token };
     }
 
+    async logout(userId: string) {
+        // Find the most recent active session
+        const session = await prisma.userSession.findFirst({
+            where: {
+                user_id: userId,
+                logout_at: null
+            },
+            orderBy: { login_at: 'desc' }
+        });
+
+        if (session) {
+            await prisma.userSession.update({
+                where: { id: session.id },
+                data: { logout_at: new Date() }
+            });
+        }
+    }
+
     async getUserById(id: string) {
         return prisma.user.findUnique({ where: { id } });
     }

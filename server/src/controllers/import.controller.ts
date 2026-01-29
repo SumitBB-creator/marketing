@@ -14,26 +14,40 @@ export const downloadTemplate = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Platform not found' });
         }
 
-        // 1. Define Headers
-        // System fields usually handled automatically or optional?
-        // Let's include basic contact info + dynamic fields
-        const systemHeaders = ['Name', 'Phone', 'Email', 'Address'];
+        // 1. Define Headers from Platform Configuration ONLY
+        // We do NOT add hardcoded system fields like Phone/Address anymore.
+        // It relies entirely on what admin configured.
 
-        const dynamicHeaders = platform.fields
-            ? (platform.fields as any[])
-                .filter((f: any) => !['Name', 'Full Name'].includes(f.field_name)) // Avoid dupes if user created them
-                .map((f: any) => f.field_name)
+        const headers = platform.fields
+            ? (platform.fields as any[]).map((f: any) => f.field_name)
             : [];
 
-        const headers = [...systemHeaders, ...dynamicHeaders];
+        if (headers.length === 0) {
+            // Fallback if no fields configured??
+            // Maybe at least "Name"? But user said ONLY configured.
+            // Let's assume there's at least one. If not, empty template is correct per request?
+            // Or maybe just "Name" as absolute minimum identifier if schema requires it?
+            // Schema LeadData is json.
+            // Let's stick to strict configuration.
+        }
 
         // 2. Create Workbook
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet([headers]);
 
-        // Add some instruction or example row?
-        const exampleRow = headers.map(h => (h === 'Phone' ? '1234567890' : h === 'Email' ? 'example@mail.com' : `Test ${h}`));
-        XLSX.utils.sheet_add_aoa(ws, [exampleRow], { origin: -1 });
+        // Add example row based on types
+        if (headers.length > 0) {
+            const exampleRow = (platform.fields as any[]).map((f: any) => {
+                switch (f.field_type) {
+                    case 'number': return 12345;
+                    case 'email': return 'example@mail.com';
+                    case 'date': return '2023-01-01';
+                    case 'datetime': return '2023-01-01 10:00';
+                    default: return `Test ${f.field_name}`;
+                }
+            });
+            XLSX.utils.sheet_add_aoa(ws, [exampleRow], { origin: -1 });
+        }
 
         XLSX.utils.book_append_sheet(wb, ws, 'Template');
 
@@ -60,7 +74,7 @@ export const importLeads = async (req: Request, res: Response) => {
         const userId = req.user.id; // Marketer or Admin who is importing
 
         // 1. Read File
-        const workbook = XLSX.readFile(req.file.path);
+        const workbook = XLSX.readFile(req.file.path, { cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const rows: any[] = XLSX.utils.sheet_to_json(sheet);
@@ -93,7 +107,9 @@ export const importLeads = async (req: Request, res: Response) => {
                     platform_id: platformId,
                     lead_data: leadData,
                     current_status: 'New', // Default status
-                    marketer_id: userId // Assign to uploader (if marketer) - logic might need check logic if Admin import
+                    // If assignToPool is true, marketer_id is undefined (common pool)
+                    // If not, assign to uploader
+                    marketer_id: req.body.assignToPool === 'true' ? undefined : userId
                 });
                 importedCount++;
             } catch (err: any) {

@@ -72,6 +72,16 @@ export default function AdminLeadsPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        try {
+            await LeadService.delete(id);
+            fetchData();
+        } catch (error: any) {
+            console.error("Failed to delete lead", error);
+            alert(`Failed to delete lead: ${error.response?.data?.message || 'Unknown error'}`);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-bold tracking-tight">Leads Management</h1>
@@ -188,6 +198,7 @@ export default function AdminLeadsPage() {
                         platforms={platforms}
                         onSave={handleSave}
                         onEdit={(lead) => setViewingLead(lead)}
+                        onDelete={handleDelete}
                     />
                 )}
             </div>

@@ -2,12 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../lib/axios';
 // import { useNavigate } from 'react-router-dom';
 
-interface User {
-    id: string;
-    email: string;
-    full_name: string;
-    role: 'super_admin' | 'admin' | 'marketer';
-}
+import { User } from '@/types';
 
 interface AuthContextType {
     user: User | null;
@@ -15,6 +10,7 @@ interface AuthContextType {
     isLoading: boolean;
     login: (token: string, user: User) => void;
     logout: () => void;
+    updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,13 +42,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(userData);
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (error) {
+            console.error('Logout failed', error);
+        }
         localStorage.removeItem('token');
         setUser(null);
     };
 
+    const updateUser = (data: Partial<User>) => {
+        setUser((prev) => (prev ? { ...prev, ...data } : null));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
+        <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

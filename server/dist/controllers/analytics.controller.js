@@ -15,9 +15,16 @@ exports.getDashboardStats = getDashboardStats;
 const getPerformanceStats = async (req, res) => {
     try {
         const { date, marketer_id } = req.query;
+        // @ts-ignore
+        const user = req.user;
+        let targetMarketerId = marketer_id;
+        // If user is a marketer, they can only see their own stats
+        if (user.role === 'marketer') {
+            targetMarketerId = user.id;
+        }
         const stats = await analytics_service_1.analyticsService.getPerformanceStats({
             date: date,
-            marketer_id: marketer_id
+            marketer_id: targetMarketerId
         });
         res.json(stats);
     }

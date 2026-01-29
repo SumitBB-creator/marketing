@@ -11,6 +11,7 @@ export default function PerformancePage() {
     const [stats, setStats] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [marketerName, setMarketerName] = useState('');
 
     const fetchData = async () => {
         setLoading(true);
@@ -28,6 +29,10 @@ export default function PerformancePage() {
         fetchData();
     }, [date]);
 
+    const filteredStats = stats.filter(stat =>
+        stat.marketer_name.toLowerCase().includes(marketerName.toLowerCase())
+    );
+
     return (
         <div className="space-y-6 p-8">
             <div className="flex items-center gap-4">
@@ -43,7 +48,7 @@ export default function PerformancePage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                        Filter by Date
+                        Filters
                     </CardTitle>
                     <Button variant="ghost" size="sm" onClick={fetchData}>
                         <RefreshCw className="h-4 w-4" />
@@ -51,12 +56,25 @@ export default function PerformancePage() {
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-4 mb-6">
-                        <Input
-                            type="date"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            className="max-w-[200px]"
-                        />
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Date</label>
+                            <Input
+                                type="date"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="max-w-[200px]"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Marketer Name</label>
+                            <Input
+                                type="text"
+                                placeholder="Filter by name..."
+                                value={marketerName}
+                                onChange={(e) => setMarketerName(e.target.value)}
+                                className="max-w-[200px]"
+                            />
+                        </div>
                     </div>
 
                     <div className="rounded-md border">
@@ -65,6 +83,7 @@ export default function PerformancePage() {
                                 <tr>
                                     <th className="px-4 py-3 font-medium">Marketer</th>
                                     <th className="px-4 py-3 font-medium">First Login</th>
+                                    <th className="px-4 py-3 font-medium">Last Logout</th>
                                     <th className="px-4 py-3 font-medium">Last Lead Created</th>
                                     <th className="px-4 py-3 font-medium">Total Active Time</th>
                                 </tr>
@@ -72,18 +91,21 @@ export default function PerformancePage() {
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={4} className="text-center py-8 text-muted-foreground">Loading...</td>
+                                        <td colSpan={5} className="text-center py-8 text-muted-foreground">Loading...</td>
                                     </tr>
-                                ) : stats.length === 0 ? (
+                                ) : filteredStats.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="text-center py-8 text-muted-foreground">No activity recorded for this date.</td>
+                                        <td colSpan={5} className="text-center py-8 text-muted-foreground">No activity recorded for this date.</td>
                                     </tr>
                                 ) : (
-                                    stats.map((stat: any) => (
+                                    filteredStats.map((stat: any) => (
                                         <tr key={stat.marketer_id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                             <td className="px-4 py-3 font-medium">{stat.marketer_name}</td>
                                             <td className="px-4 py-3 text-muted-foreground">
                                                 {stat.first_login ? formatDateIST(stat.first_login).split(',')[1] : '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-muted-foreground">
+                                                {stat.last_logout ? formatDateIST(stat.last_logout).split(',')[1] : '-'}
                                             </td>
                                             <td className="px-4 py-3 text-muted-foreground">
                                                 {stat.last_lead_time ? formatDateIST(stat.last_lead_time).split(',')[1] : '-'}

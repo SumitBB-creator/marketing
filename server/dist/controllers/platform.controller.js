@@ -10,7 +10,7 @@ const createPlatformSchema = zod_1.z.object({
 });
 const createFieldSchema = zod_1.z.object({
     field_name: zod_1.z.string().min(1),
-    field_type: zod_1.z.enum(['text', 'email', 'url', 'phone', 'number', 'date', 'textarea', 'select', 'file']),
+    field_type: zod_1.z.enum(['text', 'email', 'url', 'phone', 'number', 'date', 'datetime', 'textarea', 'select', 'file']),
     field_category: zod_1.z.enum(['lead_detail', 'tracking_action']),
     is_required: zod_1.z.boolean().optional(),
     field_order: zod_1.z.number().int(),

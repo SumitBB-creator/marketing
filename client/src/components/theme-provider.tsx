@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react"
 
-type Theme = "dark" | "light" | "system"
+type Theme = "dark" | "light" | "system" | "custom"
 
 type ThemeProviderProps = {
     children: React.ReactNode
@@ -41,6 +41,15 @@ export function ThemeProvider({
                 : "light"
 
             root.classList.add(systemTheme)
+            return
+        }
+
+        if (theme === "custom") {
+            // Treat custom generally as light-ish for Shadcn defaults (border, text), 
+            // but let BrandingProvider override the background.
+            // Or maybe we treat it as light base?
+            root.classList.add("light")
+            root.setAttribute("data-theme", "custom")
             return
         }
 

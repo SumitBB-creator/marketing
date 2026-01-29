@@ -49,6 +49,19 @@ export const login = async (req: Request, res: Response) => {
     }
 };
 
+export const logout = async (req: Request, res: Response) => {
+    try {
+        // @ts-ignore
+        const userId = req.user?.id;
+        if (userId) {
+            await authService.logout(userId);
+        }
+        res.json({ message: 'Logged out successfully' });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const getMe = async (req: Request, res: Response) => {
     try {
         // @ts-ignore - user is attached by middleware

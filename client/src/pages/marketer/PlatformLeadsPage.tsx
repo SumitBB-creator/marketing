@@ -61,6 +61,26 @@ export default function PlatformLeadsPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        try {
+            await LeadService.delete(id);
+            fetchData();
+        } catch (error: any) {
+            console.error("Failed to delete lead", error);
+            alert(`Failed to delete lead: ${error.response?.data?.message || 'Unknown error'}`);
+        }
+    };
+
+    const handleOptOut = async (id: string) => {
+        try {
+            await LeadService.optOut(id);
+            fetchData();
+        } catch (error: any) {
+            console.error("Failed to opt out", error);
+            alert(`Failed to opt out: ${error.response?.data?.message || 'Unknown error'}`);
+        }
+    };
+
     if (!platformId) return <div>Invalid URL</div>;
 
     return (
@@ -91,9 +111,10 @@ export default function PlatformLeadsPage() {
                     <DynamicLeadTable
                         leads={leads}
                         platforms={platform ? [platform] : []}
-                        onEdit={(lead) => setEditingLead(lead)} // Optional: keep if user wants deep edit
                         onSave={handleSave}
                         onCreate={handleCreate}
+                        onDelete={handleDelete}
+                        onOptOut={handleOptOut}
                         disableCopy={true}
                     />
                 )}

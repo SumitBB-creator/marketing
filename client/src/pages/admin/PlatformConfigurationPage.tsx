@@ -177,6 +177,7 @@ export default function PlatformConfigurationPage() {
                                 <option value="phone">Phone</option>
                                 <option value="number">Number</option>
                                 <option value="date">Date</option>
+                                <option value="datetime">Date & Time</option>
                                 <option value="textarea">Long Text</option>
                                 <option value="select">Dropdown (Select)</option>
                                 <option value="file">File Upload</option>

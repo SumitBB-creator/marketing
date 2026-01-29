@@ -1,7 +1,7 @@
 import api from '@/lib/axios';
 
 export const LeadService = {
-    create: async (data: any) => {
+    create: async (data: any & { assign_to_pool?: boolean }) => {
         const response = await api.post('/leads', data);
         return response.data;
     },
@@ -28,6 +28,16 @@ export const LeadService = {
 
     shareLead: async (id: string) => {
         const response = await api.post(`/leads/${id}/share`);
+        return response.data;
+    },
+
+    delete: async (id: string) => {
+        const response = await api.delete(`/leads/${id}`);
+        return response.data;
+    },
+
+    optOut: async (id: string) => {
+        const response = await api.post(`/leads/${id}/opt-out`);
         return response.data;
     },
 

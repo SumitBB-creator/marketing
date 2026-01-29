@@ -19,7 +19,11 @@ interface LeadFormProps {
     onCancel: () => void;
 }
 
+import { useAuth } from '@/context/AuthContext';
+import { Checkbox } from '@/components/ui/checkbox';
+
 export default function LeadForm({ platformId, fields, initialData, leadId, onSuccess, onCancel }: LeadFormProps) {
+    const { user } = useAuth();
     // If initialData is provided, use it for defaults.
     // If leadId is provided, we might want to fetch fresh data for history.
     const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
@@ -28,6 +32,9 @@ export default function LeadForm({ platformId, fields, initialData, leadId, onSu
             current_status: initialData.current_status,
         } : {}
     });
+
+    // Default to false for single create, user must verify
+    const [assignToPool, setAssignToPool] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [activities, setActivities] = useState<any[]>([]);
@@ -91,6 +98,7 @@ export default function LeadForm({ platformId, fields, initialData, leadId, onSu
                     platform_id: platformId,
                     lead_data: leadData,
                     current_status: 'New',
+                    assign_to_pool: assignToPool
                 });
             }
             onSuccess();
@@ -169,7 +177,7 @@ export default function LeadForm({ platformId, fields, initialData, leadId, onSu
                     </div>
                 ) : (
                     <Input
-                        type={field.field_type === 'number' ? 'number' : field.field_type === 'date' ? 'date' : 'text'}
+                        type={field.field_type === 'number' ? 'number' : field.field_type === 'date' ? 'date' : field.field_type === 'datetime' ? 'datetime-local' : 'text'}
                         {...register(field.field_name, { required: field.is_required })}
                     />
                 )}
@@ -198,11 +206,25 @@ export default function LeadForm({ platformId, fields, initialData, leadId, onSu
                     </div>
                 )}
 
-                <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-                    <Button type="submit" disabled={loading}>
-                        {loading ? 'Saving...' : 'Save Lead'}
-                    </Button>
+                <div className="flex justify-between items-center pt-4">
+                    {/* Admin Option: Add to Pool */}
+                    {(user?.role === 'admin' || user?.role === 'super_admin') && !leadId ? (
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="assign_pool"
+                                checked={assignToPool}
+                                onChange={(e) => setAssignToPool(e.target.checked)}
+                            />
+                            <Label htmlFor="assign_pool" className="text-sm font-normal">Add to Common Lead Pool</Label>
+                        </div>
+                    ) : (<span></span>)}
+
+                    <div className="flex gap-2">
+                        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading ? 'Saving...' : 'Save Lead'}
+                        </Button>
+                    </div>
                 </div>
             </form>
 

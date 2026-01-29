@@ -10,6 +10,7 @@ import MarketerDashboard from './pages/marketer/DashboardPage';
 import PlatformLeadsPage from './pages/marketer/PlatformLeadsPage';
 import AnalyticsPage from './pages/admin/AnalyticsPage';
 import BrandingSettingsPage from './pages/admin/BrandingSettingsPage';
+import UsersPage from './pages/admin/UsersPage';
 import PerformancePage from './pages/admin/PerformancePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from "./components/theme-provider"
@@ -19,6 +20,10 @@ import MarketerLayout from './layouts/MarketerLayout';
 import AllLeadsPage from './pages/marketer/AllLeadsPage';
 import AdminLeadsPage from './pages/admin/AdminLeadsPage';
 import PublicLeadPage from './pages/public/PublicLeadPage';
+import ProfilePage from './pages/marketer/ProfilePage';
+
+import MarketerPerformancePage from './pages/marketer/MarketerPerformancePage';
+import LeadPoolPage from './pages/marketer/LeadPoolPage';
 
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -66,6 +71,9 @@ function App() {
               <Route element={<MarketerLayout />}>
                 <Route path="/marketer/platform/:platformId" element={<PlatformLeadsPage />} />
                 <Route path="/marketer/all-leads" element={<AllLeadsPage />} />
+                <Route path="/marketer/pool" element={<LeadPoolPage />} />
+                <Route path="/marketer/profile" element={<ProfilePage />} />
+                <Route path="/marketer/performance" element={<MarketerPerformancePage />} />
               </Route>
 
 
@@ -76,8 +84,10 @@ function App() {
                 <Route path="platforms" element={<PlatformListPage />} />
                 <Route path="platforms/:id/edit" element={<PlatformConfigurationPage />} />
                 <Route path="team" element={<MarketerListPage />} />
+                <Route path="users" element={<UsersPage />} />
                 <Route path="branding" element={<BrandingSettingsPage />} />
                 <Route path="performance" element={<PerformancePage />} />
+                <Route path="profile" element={<ProfilePage />} />
               </Route>
 
               {/* Shared Link - Protected but doesn't need specific layout? 

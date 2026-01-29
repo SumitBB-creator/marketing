@@ -4,13 +4,17 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Use dynamic foreground logic */
+    --foreground: var(--app-foreground, 222.2 84% 4.9%);
+
+    /* New Heading Variable */
+    --heading-foreground: var(--app-heading-foreground, 222.2 84% 4.9%);
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: var(--app-foreground, 222.2 84% 4.9%);
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: var(--app-foreground, 222.2 84% 4.9%);
 
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
@@ -33,6 +37,11 @@
     /* Matches primary */
 
     --radius: 0.5rem;
+    --sidebar: #ffffff;
+
+    /* App Background Logic: Custom in Light, Dark in Dark */
+    --app-bg: var(--branding-light-bg, #ffffff);
+    --app-sidebar: var(--branding-light-sidebar, #ffffff);
 
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -42,8 +51,14 @@
   }
 
   .dark {
+    --app-bg: #020817;
+    /* Default Shadcn dark background */
+    --app-sidebar: #0f172a;
+    /* Default dark sidebar */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
+    --heading-foreground: 210 40% 98%;
+    /* Light Headings in Dark Mode */
 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
@@ -79,5 +94,20 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: hsl(var(--heading-foreground));
+  }
+}
+
+@layer utilities {
+  .text-heading {
+    color: hsl(var(--heading-foreground));
   }
 }

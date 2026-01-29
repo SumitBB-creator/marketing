@@ -82,7 +82,8 @@ class AnalyticsService {
                 orderBy: { created_at: 'desc' }
             });
             // 3. Total Active Duration
-            // Sum of (last_active_at - login_at) for all sessions today
+            // Sum of (end_time - login_at) for all sessions today
+            // end_time is logout_at if set, otherwise last_active_at matches
             const sessions = await database_1.default.userSession.findMany({
                 where: {
                     user_id: marketer.id,
@@ -93,9 +94,24 @@ class AnalyticsService {
                 }
             });
             const totalDurationMs = sessions.reduce((acc, session) => {
-                const duration = session.last_active_at.getTime() - session.login_at.getTime();
+                let endTime = session.last_active_at.getTime();
+                if (session.logout_at) {
+                    endTime = session.logout_at.getTime();
+                }
+                const duration = endTime - session.login_at.getTime();
                 return acc + (duration > 0 ? duration : 0);
             }, 0);
+            // 4. Last Logout
+            const lastSession = await database_1.default.userSession.findFirst({
+                where: {
+                    user_id: marketer.id,
+                    logout_at: {
+                        gte: startOfDay,
+                        lte: endOfDay
+                    }
+                },
+                orderBy: { logout_at: 'desc' }
+            });
             // Convert to minutes
             const activeMinutes = Math.floor(totalDurationMs / 1000 / 60);
             const hours = Math.floor(activeMinutes / 60);
@@ -106,6 +122,7 @@ class AnalyticsService {
                 marketer_name: marketer.full_name,
                 date: startOfDay.toISOString().split('T')[0],
                 first_login: firstSession ? firstSession.login_at : null,
+                last_logout: lastSession ? lastSession.logout_at : null,
                 last_lead_time: lastLead ? lastLead.created_at : null,
                 active_duration_minutes: activeMinutes,
                 active_time_formatted: activeTimeFormatted

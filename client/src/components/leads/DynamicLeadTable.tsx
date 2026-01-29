@@ -8,7 +8,7 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, SlidersHorizontal, Pencil, Save, X, Plus, Eye, Loader2, Link } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, Pencil, Save, X, Plus, Eye, Loader2, Link, LogOut } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LeadService } from '@/services/lead';
 
@@ -18,10 +18,12 @@ interface DynamicLeadTableProps {
     onEdit?: (lead: any) => void; // Fallback for deep edits/reports
     onSave?: (id: string, data: any) => Promise<void>;
     onCreate?: (data: any) => Promise<void>;
+    onDelete?: (id: string) => Promise<void>;
+    onOptOut?: (id: string) => Promise<void>;
     disableCopy?: boolean;
 }
 
-export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onCreate, disableCopy }: DynamicLeadTableProps) {
+export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onCreate, onDelete, onOptOut, disableCopy }: DynamicLeadTableProps) {
     // 1. Determine all possible columns
     interface Column {
         id: string;
@@ -31,6 +33,7 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
         isSystem?: boolean;
         editable?: boolean;
         options?: string[];
+        type?: string;
     }
 
     const allColumns = useMemo<Column[]>(() => {
@@ -54,12 +57,23 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
         });
 
         dynamicFields.forEach(field => {
+            // Find field definition to get type
+            let fieldType = 'text';
+            for (const p of platforms) {
+                const f = p.fields?.find((pf: any) => pf.field_name === field);
+                if (f) {
+                    fieldType = f.field_type;
+                    break;
+                }
+            }
+
             cols.push({
                 id: `dyn_${field}`,
                 label: field,
                 accessor: (l: any) => l.lead_data?.[field] || '',
                 field: field,
-                editable: true
+                editable: true,
+                type: fieldType // Custom prop I'll use in renderInput
             });
         });
 
@@ -224,8 +238,14 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
         }
         // Basic Input for all dynamic fields for now. 
         // TODO: Map field types (date, number) from platforms if needed detailed mapping.
+        // Basic Input for all dynamic fields
+        const inputType = (col as any).type === 'number' ? 'number' :
+            (col as any).type === 'date' ? 'date' :
+                (col as any).type === 'datetime' ? 'datetime-local' : 'text';
+
         return (
             <Input
+                type={inputType}
                 value={value || ''}
                 onChange={e => onChange(e.target.value)}
                 className="h-8"
@@ -429,7 +449,7 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
                                                 )}
                                             </td>
                                         ))}
-                                        {(onEdit || onSave || (onEdit && onSave)) && (
+                                        {(onEdit || onSave || (onEdit && onSave) || onDelete) && (
                                             <td className="px-4 py-3 text-right bg-white dark:bg-gray-800 sticky right-0 z-10 border-l">
                                                 {isEditing ? (
                                                     <div className="flex justify-end gap-1">
@@ -453,6 +473,20 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
                                                         {onSave && (
                                                             <Button variant="ghost" size="sm" onClick={() => startEdit(lead)} title="Quick Edit" className="h-8 w-8 p-0">
                                                                 <Pencil size={14} />
+                                                            </Button>
+                                                        )}
+                                                        {onOptOut && (
+                                                            <Button variant="ghost" size="sm" onClick={() => {
+                                                                if (confirm('Are you sure you want to opt-out of this lead? It will return to the common pool.')) onOptOut(lead.id);
+                                                            }} title="Opt Out (Return to Pool)" className="h-8 w-8 p-0 text-orange-500 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20">
+                                                                <LogOut size={14} />
+                                                            </Button>
+                                                        )}
+                                                        {onDelete && (
+                                                            <Button variant="ghost" size="sm" onClick={() => {
+                                                                if (confirm('Are you sure you want to delete this lead?')) onDelete(lead.id);
+                                                            }} title="Delete Lead" className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                                                <X size={14} />
                                                             </Button>
                                                         )}
                                                     </div>

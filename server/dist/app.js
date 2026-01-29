@@ -17,12 +17,15 @@ const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
 const stickyNote_routes_1 = __importDefault(require("./routes/stickyNote.routes"));
 const import_routes_1 = __importDefault(require("./routes/import.routes"));
 const public_routes_1 = __importDefault(require("./routes/public.routes"));
+const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const app = (0, express_1.default)();
 // Middleware
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cors_1.default)());
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use((0, morgan_1.default)('dev'));
 // Routes
 app.use('/api/auth', auth_routes_1.default);
@@ -35,6 +38,7 @@ app.use('/api/upload', upload_routes_1.default);
 app.use('/api/notes', stickyNote_routes_1.default);
 app.use('/api/import', import_routes_1.default);
 app.use('/api/shared', public_routes_1.default);
+app.use('/api/users', user_routes_1.default);
 // Serve uploads statically
 const path_1 = __importDefault(require("path"));
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));

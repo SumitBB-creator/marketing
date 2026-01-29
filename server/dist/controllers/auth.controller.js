@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMe = exports.login = exports.register = void 0;
+exports.getMe = exports.logout = exports.login = exports.register = void 0;
 const auth_service_1 = require("../services/auth.service");
 const zod_1 = require("zod");
 const registerSchema = zod_1.z.object({
@@ -51,6 +51,20 @@ const login = async (req, res) => {
     }
 };
 exports.login = login;
+const logout = async (req, res) => {
+    try {
+        // @ts-ignore
+        const userId = req.user?.id;
+        if (userId) {
+            await auth_service_1.authService.logout(userId);
+        }
+        res.json({ message: 'Logged out successfully' });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.logout = logout;
 const getMe = async (req, res) => {
     try {
         // @ts-ignore - user is attached by middleware

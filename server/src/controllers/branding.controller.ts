@@ -7,6 +7,10 @@ const updateBrandingSchema = z.object({
     primary_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
     secondary_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
     accent_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
+    sidebar_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
+    background_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
+    text_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
+    heading_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
     company_name: z.string().min(1).optional(),
     logo_url: z.string().url().optional().or(z.literal("")),
     favicon_url: z.string().url().optional().or(z.literal("")),
@@ -60,7 +64,7 @@ export class BrandingController {
             }
 
             // @ts-ignore - req.user is populated by auth middleware
-            const userId = req.user?.userId;
+            const userId = req.user?.id;
 
             if (!userId) {
                 return res.status(401).json({ error: "Unauthorized" });
@@ -80,7 +84,7 @@ export class BrandingController {
     async resetBranding(req: Request, res: Response) {
         try {
             // @ts-ignore
-            const userId = req.user?.userId;
+            const userId = req.user?.id;
             if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
             const resetConfig = await brandingService.resetBrandingConfig(userId);

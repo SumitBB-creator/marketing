@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { BrandingService } from '@/services/branding';
 import { BrandingConfig } from '@/types';
 import { hexToHsl } from '@/lib/utils';
+import { useTheme } from './theme-provider';
 
 interface BrandingContextType {
     config: BrandingConfig | null;
@@ -17,12 +18,12 @@ export const useBranding = () => useContext(BrandingContext);
 
 export function BrandingProvider({ children }: { children: React.ReactNode }) {
     const [config, setConfig] = useState<BrandingConfig | null>(null);
+    const { theme } = useTheme();
 
     const refreshBranding = async () => {
         try {
             const data = await BrandingService.getBranding();
             setConfig(data);
-            applyBranding(data);
         } catch (error) {
             console.error("Failed to load branding", error);
         }
@@ -32,6 +33,13 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
         refreshBranding();
     }, []);
 
+    // Apply branding whenever config or theme changes
+    useEffect(() => {
+        if (config) {
+            applyBranding(config);
+        }
+    }, [config, theme]);
+
     const applyBranding = (data: BrandingConfig) => {
         const root = document.documentElement;
 
@@ -39,20 +47,73 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
         if (data.secondary_color) root.style.setProperty('--secondary', hexToHsl(data.secondary_color));
         if (data.accent_color) root.style.setProperty('--accent', hexToHsl(data.accent_color));
 
+        // Background & Text Logic
+        let bgColor = '#ffffff';
+        let sidebarColor = '#ffffff';
+        let textColor = '222.2 84% 4.9%'; // Default Light Foreground (HSL)
+        let headingColor = '222.2 84% 4.9%'; // Default Light Heading (HSL)
+
+        // Check if system is dark
+        const systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        if (theme === 'dark') {
+            // Forced Dark - Colors handled by .dark class mostly, but we set base vars for safety if needed
+            bgColor = '#020817';
+            sidebarColor = '#0f172a';
+            // We do NOT override text colors here, relying on .dark class in CSS
+        } else if (theme === 'light') {
+            // Forced Light - White BG, Standard Text
+            bgColor = '#ffffff';
+            sidebarColor = '#ffffff';
+        } else if (theme === 'custom') {
+            // Forced Custom
+            // Use Custom Color explicitly
+            bgColor = data.background_color || '#ffffff';
+            sidebarColor = bgColor;
+
+            // Convert Custom Text Colors to HSL
+            if (data.text_color) textColor = hexToHsl(data.text_color);
+            if (data.heading_color) headingColor = hexToHsl(data.heading_color);
+        } else if (theme === 'system') {
+            if (systemIsDark) {
+                // System Dark
+                bgColor = '#020817';
+                sidebarColor = '#0f172a';
+            } else {
+                // System Light -> Use Custom Background
+                bgColor = data.background_color || '#ffffff';
+                sidebarColor = bgColor;
+
+                // Use Custom Text in System Light too
+                if (data.text_color) textColor = hexToHsl(data.text_color);
+                if (data.heading_color) headingColor = hexToHsl(data.heading_color);
+            }
+        }
+
+        root.style.setProperty('--app-bg', bgColor);
+        root.style.setProperty('--app-sidebar', sidebarColor);
+
+        // Only set text colors if NOT in forced Dark Mode
+        // If Custom or Light (System), set them.
+        // If Dark (System or Forced), REMOVE them to let CSS handle it.
+        const shouldSetText = (theme === 'custom' || theme === 'light' || (theme === 'system' && !systemIsDark));
+
+        if (shouldSetText) {
+            root.style.setProperty('--app-foreground', textColor);
+            root.style.setProperty('--app-heading-foreground', headingColor);
+        } else {
+            root.style.removeProperty('--app-foreground');
+            root.style.removeProperty('--app-heading-foreground');
+        }
+
         if (data.border_radius) root.style.setProperty('--radius', data.border_radius);
 
-        // Font family handling might require loading fonts or just setting the stack if it's a web safe font
-        // For simplicity, we just set the variable if the system uses it, or body style.
-        // Tailwind default theme uses --font-sans usually if configured, or we can force it.
-        // If we want to support Google Fonts, we'd need to dynamically inject a <link> tag.
-        // For MVP, we assume standard fonts or handled elsewhere. But we can set the css var.
         if (data.font_family) {
             root.style.setProperty('--font-sans', data.font_family);
             document.body.style.fontFamily = data.font_family;
         }
 
         if (data.custom_css) {
-            // Remove old custom css
             const oldStyle = document.getElementById('custom-branding-css');
             if (oldStyle) oldStyle.remove();
 
