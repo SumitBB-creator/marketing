@@ -205,15 +205,18 @@ const shareLead = async (req, res) => {
             return res.status(403).json({ message: 'Access denied' });
         }
         // Create shared link
+        console.log('Generating shared link for lead:', id, 'User:', user.id);
         const sharedLink = await database_1.default.sharedLink.create({
             data: {
                 lead_id: id,
                 created_by: user.id
             }
         });
+        console.log('Shared link created:', sharedLink.token);
         res.json({ token: sharedLink.token });
     }
     catch (error) {
+        console.error('Error generating shared link:', error);
         res.status(500).json({ message: error.message });
     }
 };
