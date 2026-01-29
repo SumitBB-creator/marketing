@@ -1,7 +1,7 @@
 // import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
+// import RegisterPage from './pages/auth/RegisterPage';
 import AdminLayout from './layouts/AdminLayout';
 import PlatformListPage from './pages/admin/PlatformListPage';
 import PlatformConfigurationPage from './pages/admin/PlatformConfigurationPage';
@@ -62,7 +62,7 @@ function App() {
           <Routes>
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+              {/* <Route path="/register" element={<RegisterPage />} /> */}
             </Route>
 
             <Route element={<ProtectedRoute />}>

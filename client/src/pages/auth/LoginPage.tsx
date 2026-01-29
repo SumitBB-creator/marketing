@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 // import { Checkbox } from '@/components/ui/checkbox'; // Need to create Checkbox or just remove if not needed yet. I'll remove for now.
 
 const loginSchema = z.object({
@@ -82,14 +82,14 @@ export default function LoginPage() {
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex flex-col space-y-2">
+                {/* <CardFooter className="flex flex-col space-y-2">
                     <div className="text-sm text-center text-gray-500">
                         Don't have an account?{' '}
                         <Link to="/register" className="text-primary hover:underline">
                             Sign up
                         </Link>
                     </div>
-                </CardFooter>
+                </CardFooter> */}
             </Card>
         </div>
     );
