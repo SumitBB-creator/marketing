@@ -40,8 +40,9 @@ app.use('/api/import', import_routes_1.default);
 app.use('/api/shared', public_routes_1.default);
 app.use('/api/users', user_routes_1.default);
 // Serve uploads statically
-const path_1 = __importDefault(require("path"));
-app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
+// Serve uploads via API route now
+// import path from 'path';
+// app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Health Check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date() });

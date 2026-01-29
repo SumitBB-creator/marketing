@@ -39,8 +39,9 @@ app.use('/api/shared', publicRoutes);
 app.use('/api/users', userRoutes);
 
 // Serve uploads statically
-import path from 'path';
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve uploads via API route now
+// import path from 'path';
+// app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health Check
 app.get('/health', (req, res) => {

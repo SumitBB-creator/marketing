@@ -295,3 +295,14 @@ model SharedLink {
 
   @@map("shared_links")
 }
+
+model FileStorage {
+  id        String   @id @default(uuid())
+  filename  String   @unique
+  mimeType  String
+  data      Bytes
+  size      Int
+  created_at DateTime @default(now())
+
+  @@map("file_storage")
+}

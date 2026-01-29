@@ -3,30 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadFile = exports.upload = void 0;
+exports.getFile = exports.uploadFile = exports.upload = void 0;
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
-// Configure Multer Storage
-// Configure Multer Storage
-const storage = multer_1.default.diskStorage({
-    destination: (req, file, cb) => {
-        // Use /tmp on Vercel/Production for ephemeral storage
-        const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
-        const uploadDir = isProduction ? '/tmp' : 'uploads/';
-        if (!isProduction && !fs_1.default.existsSync(uploadDir)) {
-            fs_1.default.mkdirSync(uploadDir);
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path_1.default.extname(file.originalname));
-    }
-});
+const database_1 = require("../config/database");
+// Configure Multer Storage (Memory for DB storage handling)
+const storage = multer_1.default.memoryStorage();
 exports.upload = (0, multer_1.default)({
     storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
         // Allowed file types
         const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
@@ -40,23 +25,55 @@ exports.upload = (0, multer_1.default)({
         }
     }
 });
-const uploadFile = (req, res) => {
+const uploadFile = async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });
         }
+        const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path_1.default.extname(req.file.originalname)}`;
+        // Save to Database
+        await database_1.prisma.fileStorage.create({
+            data: {
+                filename: filename,
+                mimeType: req.file.mimetype,
+                data: req.file.buffer, // Explicit cast
+                size: req.file.size
+            }
+        });
         // Return the accessible URL
         const protocol = req.protocol;
         const host = req.get('host');
-        const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+        // If Vercel, host might need https
+        const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+        const fileUrl = `${isSecure ? 'https' : 'http'}://${host}/api/upload/${filename}`;
         res.json({
             url: fileUrl,
-            filename: req.file.filename,
+            filename: filename,
             originalName: req.file.originalname
         });
     }
     catch (error) {
+        console.error("Upload error:", error);
         res.status(500).json({ message: error.message });
     }
 };
 exports.uploadFile = uploadFile;
+const getFile = async (req, res) => {
+    try {
+        const { filename } = req.params;
+        const fileRecord = await database_1.prisma.fileStorage.findUnique({
+            where: { filename: filename }
+        });
+        if (!fileRecord) {
+            return res.status(404).json({ message: 'File not found' });
+        }
+        res.setHeader('Content-Type', fileRecord.mimeType);
+        res.setHeader('Content-Length', fileRecord.size);
+        res.send(fileRecord.data);
+    }
+    catch (error) {
+        console.error("File retrieval error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.getFile = getFile;
