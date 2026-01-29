@@ -16,12 +16,12 @@
             "dest": "/server/api/index.ts"
         },
         {
-            "src": "/uploads/(.*)",
-            "dest": "/server/uploads/$1"
-        },
-        {
             "src": "/(.+\\..+)",
             "dest": "/client/$1"
+        },
+        {
+            "src": "/uploads/(.*)",
+            "dest": "/server/uploads/$1"
         },
         {
             "src": "/(.*)",
