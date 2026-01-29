@@ -34,7 +34,10 @@ export const uploadFile = async (req: Request, res: Response) => {
         // Save to Database
         await prisma.fileStorage.create({
             data: {
+                filename: filename,
+                mimeType: req.file.mimetype,
                 data: req.file.buffer as any, // Cast to any to satisfy Prisma Bytes type
+                size: req.file.size
             }
         });
 
