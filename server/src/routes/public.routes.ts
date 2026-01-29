@@ -4,6 +4,6 @@ import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/leads/:token', authenticate, getPublicLead);
+router.get('/leads/:token', getPublicLead);
 
 export default router;

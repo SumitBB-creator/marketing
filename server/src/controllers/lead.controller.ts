@@ -207,15 +207,18 @@ export const shareLead = async (req: Request, res: Response) => {
         }
 
         // Create shared link
+        console.log('Generating shared link for lead:', id, 'User:', user.id);
         const sharedLink = await prisma.sharedLink.create({
             data: {
                 lead_id: id as string,
                 created_by: user.id
             }
         });
+        console.log('Shared link created:', sharedLink.token);
 
         res.json({ token: sharedLink.token });
     } catch (error: any) {
+        console.error('Error generating shared link:', error);
         res.status(500).json({ message: error.message });
     }
 }
