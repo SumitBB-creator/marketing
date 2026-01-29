@@ -4,10 +4,14 @@ import path from 'path';
 import fs from 'fs';
 
 // Configure Multer Storage
+// Configure Multer Storage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = 'uploads/';
-        if (!fs.existsSync(uploadDir)) {
+        // Use /tmp on Vercel/Production for ephemeral storage
+        const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
+        const uploadDir = isProduction ? '/tmp' : 'uploads/';
+
+        if (!isProduction && !fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir);
         }
         cb(null, uploadDir);

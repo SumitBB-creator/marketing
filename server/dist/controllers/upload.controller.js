@@ -8,10 +8,13 @@ const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 // Configure Multer Storage
+// Configure Multer Storage
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = 'uploads/';
-        if (!fs_1.default.existsSync(uploadDir)) {
+        // Use /tmp on Vercel/Production for ephemeral storage
+        const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
+        const uploadDir = isProduction ? '/tmp' : 'uploads/';
+        if (!isProduction && !fs_1.default.existsSync(uploadDir)) {
             fs_1.default.mkdirSync(uploadDir);
         }
         cb(null, uploadDir);
