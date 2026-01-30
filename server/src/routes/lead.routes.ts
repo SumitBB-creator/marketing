@@ -19,6 +19,6 @@ router.post('/:id/claim', requireRole([Role.marketer]), claimLead);
 router.delete('/:id', deleteLead); // Authenticated by router.use above
 router.post('/:id/opt-out', optOutLead);
 router.post('/bulk-update', bulkUpdateLeads);
-router.post('/:id/share', requireRole([Role.marketer, Role.admin]), shareLead);
+router.post('/:id/share', shareLead);
 
 export default router;
