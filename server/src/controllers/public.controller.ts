@@ -45,7 +45,7 @@ export const getPublicLead = async (req: Request, res: Response) => {
             created_at: lead.created_at,
             platform_name: lead.platform.name,
             fields: lead.platform.fields,
-            marketer_name: lead.marketer.full_name,
+            marketer_name: lead.marketer?.full_name || 'Unassigned',
             activities: (lead as any).activities // Type assertion needed until generation update
         });
     } catch (error: any) {
