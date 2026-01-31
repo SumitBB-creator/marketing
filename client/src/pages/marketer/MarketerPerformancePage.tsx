@@ -3,10 +3,12 @@ import { AnalyticsService } from '@/services/analytics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { formatDateIST } from '@/lib/utils';
+import { formatDateIST, cn } from '@/lib/utils';
 import { RefreshCw } from 'lucide-react';
+import { useTheme } from '@/components/theme-provider';
 
 export default function MarketerPerformancePage() {
+    const { theme } = useTheme();
     const [stats, setStats] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -58,9 +60,9 @@ export default function MarketerPerformancePage() {
                         />
                     </div>
 
-                    <div className="rounded-md border">
+                    <div className="rounded-md border overflow-hidden">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-50 dark:bg-gray-900 border-b">
+                            <thead className={cn("border-b", theme === 'custom' ? "bg-primary text-primary-foreground" : "bg-gray-50 dark:bg-gray-900")}>
                                 <tr>
                                     <th className="px-4 py-3 font-medium">First Login</th>
                                     <th className="px-4 py-3 font-medium">Last Logout</th>
@@ -68,29 +70,33 @@ export default function MarketerPerformancePage() {
                                     <th className="px-4 py-3 font-medium">Total Active Time</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                            <tbody className={cn("divide-y", theme === 'custom' ? "divide-primary-foreground/20" : "divide-gray-100 dark:divide-gray-800")}>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={4} className="text-center py-8 text-muted-foreground">Loading...</td>
+                                        <td colSpan={4} className={cn("text-center py-8", theme === 'custom' ? "text-primary-foreground/80" : "text-muted-foreground")}>Loading...</td>
                                     </tr>
                                 ) : !myStat ? (
                                     <tr>
-                                        <td colSpan={4} className="text-center py-8 text-muted-foreground">No activity recorded for this date.</td>
+                                        <td colSpan={4} className={cn("text-center py-8", theme === 'custom' ? "text-primary-foreground/80" : "text-muted-foreground")}>No activity recorded for this date.</td>
                                     </tr>
                                 ) : (
-                                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                        <td className="px-4 py-3 text-muted-foreground">
+                                    <tr className={cn(theme === 'custom' ? "hover:bg-primary/10 border-primary-foreground" : "hover:bg-gray-50 dark:hover:bg-gray-800/50")}>
+                                        <td className={cn("px-4 py-3", theme === 'custom' ? "text-primary-foreground" : "text-muted-foreground")}>
                                             {myStat.first_login ? formatDateIST(myStat.first_login).split(',')[1] : '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-muted-foreground">
+                                        <td className={cn("px-4 py-3", theme === 'custom' ? "text-primary-foreground" : "text-muted-foreground")}>
                                             {myStat.last_logout ? formatDateIST(myStat.last_logout).split(',')[1] : '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-muted-foreground">
+                                        <td className={cn("px-4 py-3", theme === 'custom' ? "text-primary-foreground" : "text-muted-foreground")}>
                                             {myStat.last_lead_time ? formatDateIST(myStat.last_lead_time).split(',')[1] : '-'}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${myStat.active_duration_minutes > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
-                                                }`}>
+                                            <span className={cn(
+                                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                                                myStat.active_duration_minutes > 0
+                                                    ? (theme === 'custom' ? "bg-white text-primary" : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200")
+                                                    : (theme === 'custom' ? "bg-white/50 text-primary" : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300")
+                                            )}>
                                                 {myStat.active_time_formatted}
                                             </span>
                                         </td>

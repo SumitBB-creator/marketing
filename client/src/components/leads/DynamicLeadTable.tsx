@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { formatDateIST } from '@/lib/utils';
+import { formatDateIST, cn } from '@/lib/utils';
+import { useTheme } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -24,6 +25,7 @@ interface DynamicLeadTableProps {
 }
 
 export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onCreate, onDelete, onOptOut, disableCopy }: DynamicLeadTableProps) {
+    const { theme } = useTheme();
     // 1. Determine all possible columns
     interface Column {
         id: string;
@@ -273,7 +275,10 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-2 rounded-md border shadow-sm">
+            <div className={cn(
+                "flex justify-between items-center p-2 rounded-md border shadow-sm",
+                theme === 'custom' ? "bg-card text-card-foreground" : "bg-white dark:bg-gray-800"
+            )}>
                 <div className="flex items-center gap-4">
                     {selectedIds.size > 0 ? (
                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
@@ -335,7 +340,11 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
             </div>
 
             <div
-                className={`rounded-md border bg-white dark:bg-gray-800 shadow overflow-hidden ${disableCopy ? 'select-none' : ''}`}
+                className={cn(
+                    "rounded-md border shadow overflow-hidden",
+                    disableCopy ? 'select-none' : '',
+                    theme === 'custom' ? "bg-card text-card-foreground" : "bg-white dark:bg-gray-800"
+                )}
                 onCopy={(e) => {
                     if (disableCopy) {
                         e.preventDefault();
@@ -349,7 +358,10 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
             >
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 dark:bg-gray-900 border-b">
+                        <thead className={theme === 'custom'
+                            ? "bg-primary text-primary-foreground border-b border-primary/20"
+                            : "bg-gray-50 dark:bg-gray-900 border-b"
+                        }>
                             <tr>
                                 <th className="px-4 py-3 w-[40px]">
                                     <Checkbox
@@ -371,7 +383,10 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
                                         </div>
                                     </th>
                                 ))}
-                                {(onEdit || onSave) && <th className="px-4 py-3 font-medium text-right bg-gray-50 dark:bg-gray-900 sticky right-0 z-10 w-[100px]">Actions</th>}
+                                {(onEdit || onSave) && <th className={cn(
+                                    "px-4 py-3 font-medium text-right sticky right-0 z-10 w-[100px]",
+                                    theme === 'custom' ? "bg-primary border-primary/20 text-primary-foreground" : "bg-gray-50 dark:bg-gray-900"
+                                )}>Actions</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -409,7 +424,13 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
                                 const isEditing = editingId === lead.id;
 
                                 return (
-                                    <tr key={lead.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isEditing ? 'bg-blue-50/30' : ''}`}>
+                                    <tr key={lead.id} className={cn(
+                                        "transition-colors",
+                                        theme === 'custom'
+                                            ? "hover:bg-primary/20 border-b border-primary/10"
+                                            : "hover:bg-gray-50 dark:hover:bg-gray-800/50 border-gray-100 dark:border-gray-800",
+                                        isEditing ? (theme === 'custom' ? 'bg-primary/10' : 'bg-blue-50/30') : ''
+                                    )}>
                                         <td className="px-4 py-3 align-top">
                                             <Checkbox
                                                 checked={selectedIds.has(lead.id)}
@@ -450,7 +471,10 @@ export default function DynamicLeadTable({ leads, platforms, onEdit, onSave, onC
                                             </td>
                                         ))}
                                         {(onEdit || onSave || (onEdit && onSave) || onDelete) && (
-                                            <td className="px-4 py-3 text-right bg-white dark:bg-gray-800 sticky right-0 z-10 border-l">
+                                            <td className={cn(
+                                                "px-4 py-3 text-right sticky right-0 z-10 border-l",
+                                                theme === 'custom' ? "bg-card border-primary/10" : "bg-white dark:bg-gray-800"
+                                            )}>
                                                 {isEditing ? (
                                                     <div className="flex justify-end gap-1">
                                                         <Button size="sm" onClick={() => handleSave(lead.id)} disabled={saving} className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700">

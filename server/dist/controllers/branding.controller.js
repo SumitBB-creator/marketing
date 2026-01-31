@@ -10,6 +10,7 @@ const updateBrandingSchema = zod_1.z.object({
     accent_color: zod_1.z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
     sidebar_color: zod_1.z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
     background_color: zod_1.z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
+    card_background_color: zod_1.z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
     text_color: zod_1.z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
     heading_color: zod_1.z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid Hex Color").optional(),
     company_name: zod_1.z.string().min(1).optional(),

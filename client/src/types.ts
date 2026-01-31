@@ -24,6 +24,7 @@ export interface BrandingConfig {
     accent_color: string;
     sidebar_color?: string;
     background_color?: string;
+    card_background_color?: string;
     text_color?: string;
     heading_color?: string;
     logo_url?: string;

@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { formatDateIST } from '@/lib/utils';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '@/components/theme-provider';
 
 export default function PerformancePage() {
+    const { theme } = useTheme();
     const [stats, setStats] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -77,9 +79,12 @@ export default function PerformancePage() {
                         </div>
                     </div>
 
-                    <div className="rounded-md border">
+                    <div className="rounded-md border overflow-hidden">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-50 dark:bg-gray-900 border-b">
+                            <thead className={`border-b ${theme === 'custom'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-gray-50 dark:bg-gray-900'
+                                }`}>
                                 <tr>
                                     <th className="px-4 py-3 font-medium">Marketer</th>
                                     <th className="px-4 py-3 font-medium">First Login</th>
@@ -99,7 +104,10 @@ export default function PerformancePage() {
                                     </tr>
                                 ) : (
                                     filteredStats.map((stat: any) => (
-                                        <tr key={stat.marketer_id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        <tr key={stat.marketer_id} className={theme === 'custom'
+                                            ? "hover:bg-primary/20 border-b border-primary/20"
+                                            : "hover:bg-gray-50 dark:hover:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800"
+                                        }>
                                             <td className="px-4 py-3 font-medium">{stat.marketer_name}</td>
                                             <td className="px-4 py-3 text-muted-foreground">
                                                 {stat.first_login ? formatDateIST(stat.first_login).split(',')[1] : '-'}

@@ -24,6 +24,7 @@ const brandingSchema = z.object({
     secondary_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color'),
     accent_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color'),
     background_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color').optional(),
+    card_background_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color').optional(),
     text_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color').optional(),
     heading_color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Invalid color').optional(),
     logo_url: z.string().optional().or(z.literal("")),
@@ -49,6 +50,7 @@ export default function BrandingSettingsPage() {
             secondary_color: '#10B981',
             accent_color: '#F59E0B',
             background_color: '#ffffff',
+            card_background_color: '#ffffff',
             text_color: '#1f2937',
             heading_color: '#111827',
             border_radius: '0.5rem',
@@ -72,6 +74,7 @@ export default function BrandingSettingsPage() {
                 setValue('secondary_color', config.secondary_color);
                 setValue('accent_color', config.accent_color);
                 setValue('background_color', config.background_color || '#ffffff');
+                setValue('card_background_color', config.card_background_color || '#ffffff');
                 setValue('text_color', config.text_color || '#1f2937');
                 setValue('heading_color', config.heading_color || '#111827');
                 setValue('logo_url', config.logo_url || '');
@@ -352,6 +355,15 @@ export default function BrandingSettingsPage() {
                                             <input type="color" className="h-full w-full p-0 cursor-pointer border-0" {...register('heading_color')} />
                                         </div>
                                         <Input {...register('heading_color')} className="font-mono uppercase" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="card_background_color">Tiles Background (Card)</Label>
+                                    <div className="flex gap-2">
+                                        <div className="h-10 w-10 rounded-md border shadow-sm overflow-hidden">
+                                            <input type="color" className="h-full w-full p-0 cursor-pointer border-0" {...register('card_background_color')} />
+                                        </div>
+                                        <Input {...register('card_background_color')} className="font-mono uppercase" />
                                     </div>
                                 </div>
                             </div>

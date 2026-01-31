@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { UserService } from '@/services/user.service';
 import { UploadService } from '@/services/upload.service';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/components/theme-provider';
 
 import { Loader2, Save, Key, Camera, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ const passwordSchema = z.object({
 });
 
 export default function ProfilePage() {
+    const { theme } = useTheme();
     const [loading, setLoading] = useState(true);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -180,7 +182,7 @@ export default function ProfilePage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label>Email</Label>
-                            <Input {...register('email')} disabled className="bg-muted" />
+                            <Input {...register('email')} disabled className={theme === 'custom' ? "disabled:opacity-100" : "bg-muted"} />
                             <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
                         </div>
                         <div className="space-y-2">

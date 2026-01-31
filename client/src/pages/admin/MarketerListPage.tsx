@@ -5,6 +5,8 @@ import { UserPlus, Layers } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CreateMarketerDialog from '@/components/marketers/CreateMarketerDialog';
 import PlatformAssignmentDialog from '@/components/marketers/PlatformAssignmentDialog';
+import { useTheme } from '@/components/theme-provider';
+import { cn } from '@/lib/utils';
 
 interface Marketer {
     id: string;
@@ -17,6 +19,7 @@ interface Marketer {
 }
 
 export default function MarketerListPage() {
+    const { theme } = useTheme();
     const [marketers, setMarketers] = useState<Marketer[]>([]);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [assignmentUser, setAssignmentUser] = useState<{ id: string, name: string } | null>(null);
@@ -53,7 +56,7 @@ export default function MarketerListPage() {
                             <CardTitle className="text-lg font-bold">{marketer.full_name}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm text-gray-500 mb-4">{marketer.email}</p>
+                            <p className={cn("text-sm mb-4", theme === 'custom' ? "text-primary-foreground font-medium" : "text-gray-500")}>{marketer.email}</p>
 
                             <div className="grid grid-cols-2 gap-4 mb-4 text-center">
                                 <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded">

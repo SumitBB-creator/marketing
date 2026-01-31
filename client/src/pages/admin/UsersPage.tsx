@@ -14,8 +14,9 @@ import { toast } from '@/hooks/use-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { formatDateIST } from '@/lib/utils';
+import { formatDateIST, cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTheme } from '@/components/theme-provider';
 
 const userSchema = z.object({
     full_name: z.string().min(1, 'Name is required'),
@@ -31,6 +32,7 @@ const passwordSchema = z.object({
 });
 
 export default function UsersPage() {
+    const { theme } = useTheme();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -157,78 +159,82 @@ export default function UsersPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Role</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Last Session</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {users.map((user) => {
-                                const lastSession = user.sessions?.[0];
-                                return (
-                                    <TableRow key={user.id}>
-                                        <TableCell>
-                                            <div>
-                                                <p className="font-medium text-foreground">{user.full_name}</p>
-                                                <p className="text-xs text-muted-foreground">{user.email}</p>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={user.role === 'admin' || user.role === 'super_admin' ? 'default' : 'secondary'} className="capitalize">
-                                                {user.role}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={user.is_active ? 'outline' : 'destructive'} className={user.is_active ? "text-green-600 border-green-600" : ""}>
-                                                {user.is_active ? 'Active' : 'Inactive'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="text-sm">
-                                                {lastSession ? (
-                                                    <TooltipProvider>
-                                                        <Tooltip>
-                                                            <TooltipTrigger className="text-left">
-                                                                <p>{formatDateIST(lastSession.login_at)}</p>
-                                                                <p className="text-xs text-muted-foreground truncate max-w-[150px]">
-                                                                    {lastSession.ip_address}
-                                                                </p>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent>
-                                                                <p>IP: {lastSession.ip_address}</p>
-                                                                <p>Agent: {lastSession.user_agent}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    </TooltipProvider>
-                                                ) : (
-                                                    <span className="text-muted-foreground text-xs">No session data</span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right space-x-2">
-                                            <Button variant="ghost" size="icon" onClick={() => onEditClick(user)}>
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => onPasswordClick(user)}>
-                                                <Key className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => toggleStatus(user)} title={user.is_active ? "Deactivate" : "Activate"}>
-                                                {user.is_active ? <Ban className="h-4 w-4 text-orange-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => onDeleteClick(user)}>
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
+                    <div className="rounded-md border overflow-hidden">
+                        <Table>
+                            <TableHeader className={theme === 'custom' ? "bg-primary" : ""}>
+                                <TableRow className={theme === 'custom' ? "hover:bg-primary border-primary-foreground" : ""}>
+                                    <TableHead className={theme === 'custom' ? "text-primary-foreground" : ""}>Name</TableHead>
+                                    <TableHead className={theme === 'custom' ? "text-primary-foreground" : ""}>Role</TableHead>
+                                    <TableHead className={theme === 'custom' ? "text-primary-foreground" : ""}>Status</TableHead>
+                                    <TableHead className={theme === 'custom' ? "text-primary-foreground" : ""}>Last Session</TableHead>
+                                    <TableHead className={cn("text-right", theme === 'custom' ? "text-primary-foreground" : "")}>Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {users.map((user) => {
+                                    const lastSession = user.sessions?.[0];
+                                    return (
+                                        <TableRow key={user.id} className={theme === 'custom' ? "hover:bg-primary/10 border-primary-foreground" : ""}>
+                                            <TableCell>
+                                                <div>
+                                                    <p className={cn("font-medium", theme === 'custom' ? "text-primary-foreground" : "text-foreground")}>{user.full_name}</p>
+                                                    <p className={cn("text-xs", theme === 'custom' ? "text-primary-foreground/80" : "text-muted-foreground")}>{user.email}</p>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={user.role === 'admin' || user.role === 'super_admin' ? 'default' : 'secondary'} className={cn("capitalize", theme === 'custom' ? "bg-black/20 text-primary-foreground hover:bg-black/30" : "")}>
+                                                    {user.role}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className={cn(
+                                                    user.is_active ? (theme === 'custom' ? "text-primary-foreground border-primary-foreground" : "text-green-600 border-green-600") : "border-destructive text-destructive"
+                                                )}>
+                                                    {user.is_active ? 'Active' : 'Inactive'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm">
+                                                    {lastSession ? (
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger className="text-left">
+                                                                    <p className={theme === 'custom' ? "text-primary-foreground" : ""}>{formatDateIST(lastSession.login_at)}</p>
+                                                                    <p className={cn("text-xs truncate max-w-[150px]", theme === 'custom' ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                                                                        {lastSession.ip_address}
+                                                                    </p>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>IP: {lastSession.ip_address}</p>
+                                                                    <p>Agent: {lastSession.user_agent}</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    ) : (
+                                                        <span className={cn("text-xs", theme === 'custom' ? "text-primary-foreground/70" : "text-muted-foreground")}>No session data</span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right space-x-2">
+                                                <Button variant="ghost" size="icon" onClick={() => onEditClick(user)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" onClick={() => onPasswordClick(user)}>
+                                                    <Key className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" onClick={() => toggleStatus(user)} title={user.is_active ? "Deactivate" : "Activate"}>
+                                                    {user.is_active ? <Ban className={cn("h-4 w-4", theme === 'custom' ? "text-orange-300" : "text-orange-500")} /> : <CheckCircle className={cn("h-4 w-4", theme === 'custom' ? "text-green-300" : "text-green-500")} />}
+                                                </Button>
+                                                <Button variant="ghost" size="icon" onClick={() => onDeleteClick(user)}>
+                                                    <Trash2 className={cn("h-4 w-4", theme === 'custom' ? "text-red-300" : "text-red-500")} />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
 

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { AnalyticsService } from '@/services/analytics';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, Layers, Activity } from 'lucide-react';
+import { useTheme } from '@/components/theme-provider';
+import { cn } from '@/lib/utils';
 
 interface DashboardStats {
     summary: {
@@ -15,6 +17,7 @@ interface DashboardStats {
 }
 
 export default function AnalyticsPage() {
+    const { theme } = useTheme();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -86,12 +89,12 @@ export default function AnalyticsPage() {
                                 <div key={item.platform_id} className="flex items-center">
                                     <div className="w-full flex-1">
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-sm font-medium">{item.name}</span>
-                                            <span className="text-sm text-gray-500">{item.count}</span>
+                                            <span className={cn("text-sm font-medium", theme === 'custom' ? "text-primary-foreground" : "")}>{item.name}</span>
+                                            <span className={cn("text-sm", theme === 'custom' ? "text-primary-foreground/80" : "text-gray-500")}>{item.count}</span>
                                         </div>
-                                        <div className="w-full bg-gray-100 rounded-full h-2">
+                                        <div className={cn("w-full rounded-full h-2", theme === 'custom' ? "bg-primary-foreground/20" : "bg-gray-100")}>
                                             <div
-                                                className="bg-blue-600 h-2 rounded-full"
+                                                className={cn("h-2 rounded-full", theme === 'custom' ? "bg-primary-foreground" : "bg-blue-600")}
                                                 style={{ width: `${(item.count / stats.summary.total_leads) * 100}%` }}
                                             ></div>
                                         </div>

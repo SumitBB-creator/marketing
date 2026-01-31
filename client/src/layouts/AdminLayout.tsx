@@ -6,11 +6,13 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ModeToggle } from '@/components/mode-toggle';
 
+import { useTheme } from '@/components/theme-provider';
 import { useBranding } from '@/components/branding-provider';
 
 export default function AdminLayout() {
     const { logout, user } = useAuth();
     const { config } = useBranding();
+    const { theme } = useTheme();
     const location = useLocation();
 
     const navItems = [
@@ -37,7 +39,7 @@ export default function AdminLayout() {
                                 {config?.company_name?.substring(0, 2).toUpperCase() || 'LP'}
                             </span>
                         )}
-                        <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">
+                        <h1 className="text-xl font-bold text-foreground truncate">
                             {config?.company_name || 'LeadTrack'}
                         </h1>
                     </div>
@@ -54,8 +56,12 @@ export default function AdminLayout() {
                                 className={cn(
                                     "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
                                     isActive
-                                        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-medium"
-                                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        ? theme === 'custom'
+                                            ? "bg-primary text-primary-foreground font-medium"
+                                            : "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-medium"
+                                        : theme === 'custom'
+                                            ? "text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                                            : "text-muted-foreground hover:bg-gray-50 dark:hover:bg-gray-700/50"
                                 )}
                             >
                                 <Icon size={20} />
@@ -66,7 +72,15 @@ export default function AdminLayout() {
                 </nav>
 
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                    <Link to="/admin/profile" className="flex items-center gap-3 mb-4 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg p-2 transition-colors">
+                    <Link
+                        to="/admin/profile"
+                        className={cn(
+                            "flex items-center gap-3 mb-4 px-2 rounded-lg p-2 transition-colors",
+                            theme === 'custom'
+                                ? "hover:bg-primary"
+                                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                        )}
+                    >
                         <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-medium overflow-hidden">
                             {user?.avatar_url ? (
                                 <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
@@ -75,12 +89,12 @@ export default function AdminLayout() {
                             )}
                         </div>
                         <div className="flex-1 overflow-hidden">
-                            <p className="text-sm font-medium truncate text-gray-900 dark:text-white">{user?.full_name}</p>
-                            <p className="text-xs text-gray-500 truncate capitalize">{user?.role?.replace('_', ' ')}</p>
+                            <p className="text-sm font-medium truncate text-foreground">{user?.full_name}</p>
+                            <p className="text-xs text-muted-foreground truncate capitalize">{user?.role?.replace('_', ' ')}</p>
                         </div>
                     </Link>
                     <div className="mb-2 px-2 flex justify-between items-center">
-                        <span className="text-sm text-gray-500">Theme</span>
+                        <span className="text-sm text-muted-foreground">Theme</span>
                         <ModeToggle />
                     </div>
                     <Button variant="outline" className="w-full justify-start gap-2" onClick={logout}>
